@@ -68,7 +68,9 @@ var (
 	// Proxy4Map represents the BPF map for IPv4 proxy
 	Proxy4Map = bpf.NewMap(Proxy4MapName,
 		bpf.MapTypeHash,
+		&Proxy4Key{},
 		int(unsafe.Sizeof(Proxy4Key{})),
+		&Proxy4Value{},
 		int(unsafe.Sizeof(Proxy4Value{})),
 		MaxEntries,
 		0, 0,

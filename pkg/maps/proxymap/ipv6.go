@@ -63,7 +63,9 @@ var (
 	// Proxy6Map represents the BPF map for IPv6 proxy
 	Proxy6Map = bpf.NewMap(Proxy6MapName,
 		bpf.MapTypeHash,
+		&Proxy6Key{},
 		int(unsafe.Sizeof(Proxy6Key{})),
+		&Proxy6Value{},
 		int(unsafe.Sizeof(Proxy6Value{})),
 		MaxEntries,
 		0, 0,
