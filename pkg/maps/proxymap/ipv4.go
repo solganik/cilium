@@ -78,10 +78,10 @@ var (
 		int(unsafe.Sizeof(Proxy4Value{})),
 		MaxEntries,
 		0, 0,
-		func(key []byte, value []byte) (bpf.MapKey, bpf.MapValue, error) {
-			k, v := Proxy4Key{}, Proxy4Value{}
+		func(key []byte, value []byte, mapKey bpf.MapKey, mapValue bpf.MapValue) (bpf.MapKey, bpf.MapValue, error) {
+			k, v := mapKey.(*Proxy4Key), mapValue.(*Proxy4Value)
 
-			if err := bpf.ConvertKeyValue(key, value, &k, &v); err != nil {
+			if _, _, err := bpf.ConvertKeyValue(key, value, k, v); err != nil {
 				return nil, nil, err
 			}
 
