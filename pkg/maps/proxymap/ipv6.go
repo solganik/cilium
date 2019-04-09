@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Authors of Cilium
+// Copyright 2016-2019 Authors of Cilium
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ import (
 
 var Proxy6MapName = "cilium_proxy6"
 
+// +k8s:deepcopy-gen=true
+// +k8s:deepcopy-gen:interfaces=github.com/cilium/cilium/pkg/bpf.MapKey
 type Proxy6Key struct {
 	SAddr   types.IPv6 `align:"saddr"`
 	DPort   uint16     `align:"dport"`
@@ -41,6 +43,8 @@ func (k *Proxy6Key) HostPort() string {
 	return net.JoinHostPort(k.SAddr.IP().String(), portStr)
 }
 
+// +k8s:deepcopy-gen=true
+// +k8s:deepcopy-gen:interfaces=github.com/cilium/cilium/pkg/bpf.MapValue
 type Proxy6Value struct {
 	OrigDAddr      types.IPv6 `align:"orig_daddr"`
 	OrigDPort      uint16     `align:"orig_dport"`
