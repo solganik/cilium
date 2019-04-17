@@ -776,11 +776,13 @@ func (n *linuxNodeHandler) deleteIPsec(oldNode *node.Node) {
 		oldIP4 := oldNode.GetCiliumInternalIP(false)
 		old4Net := &net.IPNet{IP: oldIP4, Mask: oldNode.IPv4AllocCIDR.Mask}
 		n.deleteNodeIPSecOutRoute(old4Net)
+		ipsec.DeleteIPsecEndpoint(old4Net)
 	}
 
 	if n.nodeConfig.EnableIPv6 && oldNode.IPv6AllocCIDR != nil {
 		old6Net := &net.IPNet{IP: oldNode.IPv6AllocCIDR.IP, Mask: oldNode.IPv6AllocCIDR.Mask}
 		n.deleteNodeIPSecOutRoute(old6Net)
+		ipsec.DeleteIPsecEndpoint(old6Net)
 	}
 }
 
