@@ -796,7 +796,11 @@ func (n *linuxNodeHandler) NodeConfigurationChanged(newConfig datapath.LocalNode
 
 	n.updateOrRemoveNodeRoutes(prevConfig.AuxiliaryPrefixes, newConfig.AuxiliaryPrefixes)
 
-	if !newConfig.EnableIPSec {
+	if newConfig.EnableIPSec {
+		if err := n.replaceHostRules(); err != nil {
+			log.WithError(err).Warning("Cannot replace Host rules")
+		}
+	} else {
 		err := n.removeEncryptRules()
 		if err != nil {
 			log.WithError(err).Warning("Cannot cleanup previous encryption rule state.")
