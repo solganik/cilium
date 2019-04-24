@@ -2,17 +2,29 @@
 
 set -e
 
+# Backwards compatibility
+if [ ! -z "${CILIUM_FLANNEL_MASTER_DEVICE}" ]; then
+	CILIUM_CNI_CHAINING_MODE="flannel"
+fi
+
 HOST_PREFIX=${HOST_PREFIX:-/host}
-if [ -z "${CILIUM_FLANNEL_MASTER_DEVICE}" ]; then
-	CNI_CONF_NAME=${CNI_CONF_NAME:-05-cilium.conf}
-else
+MTU=${MTU:-1500}
+
+case "$CILIUM_CNI_CHAINING_MODE" in
+"flannel")
 	until ip link show "${CILIUM_FLANNEL_MASTER_DEVICE}" &>/dev/null ; do
 		echo "Waiting for ${CILIUM_FLANNEL_MASTER_DEVICE} to be initialized"
 		sleep 1s
 	done
 	CNI_CONF_NAME=${CNI_CONF_NAME:-04-flannel-cilium-cni.conflist}
-fi
-MTU=${MTU:-1500}
+	;;
+"aws-cni")
+	CNI_CONF_NAME=${CNI_CONF_NAME:-05-cilium.conflist}
+	;;
+*)
+	CNI_CONF_NAME=${CNI_CONF_NAME:-05-cilium.conf}
+	;;
+esac
 
 BIN_NAME=cilium-cni
 CNI_DIR=${CNI_DIR:-${HOST_PREFIX}/opt/cni}
@@ -43,17 +55,13 @@ cp /opt/cni/bin/${BIN_NAME} ${CNI_DIR}/bin/
 
 if [ -f "${CILIUM_CNI_CONF}" ]; then
 	echo "Using existing ${CILIUM_CNI_CONF}..."
-else
-	echo "Installing new ${CILIUM_CNI_CONF}..."
-	if [ -z "${CILIUM_FLANNEL_MASTER_DEVICE}" ]; then
-		cat > ${CNI_CONF_NAME} <<EOF
-{
-    "name": "cilium",
-    "type": "cilium-cni"
-}
-EOF
-	else
-		cat > ${CNI_CONF_NAME} <<EOF
+	exit 0
+fi
+
+echo "Installing new ${CILIUM_CNI_CONF}..."
+case "$CILIUM_CNI_CHAINING_MODE" in
+"flannel")
+	cat > ${CNI_CONF_NAME} <<EOF
 {
   "cniVersion": "0.3.1",
   "name": "cbr0",
@@ -78,10 +86,54 @@ EOF
   ]
 }
 EOF
-	fi
-	if [ ! -d $(dirname $CILIUM_CNI_CONF) ]; then
-		mkdir -p $(dirname $CILIUM_CNI_CONF)
-	fi
+	;;
 
-	mv ${CNI_CONF_NAME} ${CILIUM_CNI_CONF}
+"aws-cni")
+	cat > ${CNI_CONF_NAME} <<EOF
+{
+  "name": "aws-cni",
+  "plugins": [
+    {
+      "name": "aws-cni",
+      "type": "aws-cni",
+      "vethPrefix": "eni"
+    },
+    {
+      "type": "portmap",
+      "capabilities": {"portMappings": true},
+      "snat": true
+    },
+    {
+       "name": "cilium",
+       "type": "cilium-cni"
+    }
+  ]
+}
+EOF
+	;;
+
+*)
+	cat > ${CNI_CONF_NAME} <<EOF
+{
+  "name": "cilium",
+  "type": "cilium-cni"
+}
+EOF
+	;;
+esac
+if [ ! -d $(dirname $CILIUM_CNI_CONF) ]; then
+	mkdir -p $(dirname $CILIUM_CNI_CONF)
 fi
+
+mv ${CNI_CONF_NAME} ${CILIUM_CNI_CONF}
+
+# Allow switching between chaining and direct CNI mode by removing the
+# currently unused configuration file
+case "${CNI_CONF_NAME}" in
+"05-cilium.conf")
+	rm ${HOST_PREFIX}/etc/cni/net.d/05-cilium.conflist || exit 1
+	;;
+"05-cilium.conflist")
+	rm ${HOST_PREFIX}/etc/cni/net.d/05-cilium.conf || exit 1
+	;;
+esac
