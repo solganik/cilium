@@ -63,4 +63,8 @@ type EndpointConfiguration interface {
 	// program attached to the InterfaceName() invoking the section
 	// "to-container"
 	RequireEgressProg() bool
+
+	// DisableRouting returns true if the endpoint requires for routing in
+	// BPF to be disabled and delegated to Linux routing
+	DisableRouting() bool
 }

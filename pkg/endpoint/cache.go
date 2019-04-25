@@ -54,6 +54,7 @@ type epInfoCache struct {
 	conntrackLocal                         bool
 	requireARPPassthrough                  bool
 	requireEgressProg                      bool
+	disableRouting                         bool
 	cidr4PrefixLengths, cidr6PrefixLengths []int
 	options                                *option.IntOptions
 
@@ -86,6 +87,7 @@ func (e *Endpoint) createEpInfoCache(epdir string) *epInfoCache {
 		conntrackLocal:        e.ConntrackLocalLocked(),
 		requireARPPassthrough: e.RequireARPPassthrough(),
 		requireEgressProg:     e.RequireEgressProg(),
+		disableRouting:        e.DisableRouting(),
 		cidr4PrefixLengths:    cidr4,
 		cidr6PrefixLengths:    cidr6,
 		options:               e.Options.DeepCopy(),
@@ -187,4 +189,10 @@ func (ep *epInfoCache) RequireARPPassthrough() bool {
 // "to-container" to be attached at egress on the host facing veth pair
 func (ep *epInfoCache) RequireEgressProg() bool {
 	return ep.requireEgressProg
+}
+
+// DisableRouting returns true if the endpoint requires for routing in BPF to
+// be disabled and delegated to Linux routing
+func (ep *epInfoCache) DisableRouting() bool {
+	return ep.disableRouting
 }
