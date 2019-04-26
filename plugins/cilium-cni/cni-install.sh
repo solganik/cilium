@@ -53,7 +53,7 @@ fi
 
 cp /opt/cni/bin/${BIN_NAME} ${CNI_DIR}/bin/
 
-if [ -f "${CILIUM_CNI_CONF}" ]; then
+if [ -f "${CILIUM_CNI_CONF}" -a ! -z "${CILIUM_CUSTOM_CNI_CONF}" ]; then
 	echo "Using existing ${CILIUM_CNI_CONF}..."
 	exit 0
 fi
