@@ -262,6 +262,18 @@ Annotations:
    upgrade. Connections should successfully re-establish without requiring
    clients to reconnect.
 
+.. _1.6_upgrade_notes:
+
+1.6 Upgrade Notes
+-----------------
+
+New ConfigMap Options
+~~~~~~~~~~~~~~~~~~~~~
+
+  * ``cni-chaining-mode`` has been added to automatically generate CNI chaining
+    configurations with various other plugins. See the section
+    :ref:`cni_chaining` for a list of supported CNI chaining plugins.
+
 .. _1.5_upgrade_notes:
 
 1.5 Upgrade Notes
