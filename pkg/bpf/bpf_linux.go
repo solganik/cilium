@@ -298,6 +298,8 @@ func objCheck(fd int, path string, mapType int, keySize, valueSize, maxEntries, 
 		return false
 	}
 
+	flags |= GetPreAllocateMapFlags(MapType(mapType))
+
 	scopedLog := log.WithField(logfields.Path, path)
 	mismatch := false
 
